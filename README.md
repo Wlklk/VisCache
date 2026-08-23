@@ -1,4 +1,4 @@
-# SmallAndBig — Attention-Guided KV Cache Compression for Video LLMs
+# VisCache — Visual KV Cache Pruning for Efficient Vision Large Language Model Inference
 
 A clean reimplementation of the "Small and Big" KV-cache compression pipeline for video
 multimodal LLMs (e.g. Qwen2.5-VL). Visual tokens are pruned in two stages — a **global
@@ -6,6 +6,10 @@ attention-based selection** that keeps the most informative visual tokens, follo
 **layerwise progressive prune** where shallow layers keep many tokens ("big") and deep
 layers keep few or none ("small"). Dropped tokens are fused into the survivors via a
 selective attention fusion, so information is preserved without growing the cache.
+
+## Abstract
+
+While Vision Large Language Models (VLLMs) have achieved remarkable success in multimodal reasoning, their long-context inference remains prohibitively expensive due to the massive computation and memory overhead of visual Key-Value (KV) caches. Existing KV compression methods often apply uniform pruning across visual tokens and layers, leading to substantial information loss and degraded performance. To address this challenge, we propose **VisCache**, a plug-and-play framework for coarse-to-fine **Vis**ual KV **Cache** pruning without training, which consists of two synergistic stages. First, a lightweight VLM filters temporal redundancy by selectively forwarding semantically informative keyframes. Second, we introduce PruneKV, a surgical KV compression algorithm tailored to the attention dynamics of VLLMs. Unlike rigid pruning strategies, PruneKV adopts a parabolic layer-wise budget allocation together with an asymmetric update mechanism that selectively prunes keys while fusing values, thereby preserving critical contextual information. Extensive experiments demonstrate that VisCache substantially improves inference efficiency, achieving up to 2.35× speedup and significant memory reduction while maintaining competitive performance with only 19–28% KV cache retention. VisCache consistently outperforms existing baselines, establishing a new Pareto frontier between efficiency and performance for long-context VLLM inference. Code is available in [https://github.com/Wlklk/VisCache](https://github.com/Wlklk/VisCache).
 
 ## Method
 
@@ -53,7 +57,7 @@ The pipeline is model-agnostic — nothing is hard-coded to Qwen2.5-VL:
 ## Project layout
 
 ```
-SmallAndBig/                 # repository root
+VisCache/                   # repository root
 ├── smallandbig/             # the package
 │   ├── config.py        # SmallAndBigConfig: all hyperparameters
 │   ├── keyframe.py      # CLIP + MMR keyframe selection
