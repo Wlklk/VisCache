@@ -171,12 +171,26 @@ backbones. All weights are released on the Hugging Face Hub.
 |--------------------------------|-------------------------|
 | Qwen2.5-VL-3B-Instruct         | [Qwen/Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) |
 | Qwen2.5-VL-32B-Instruct        | [Qwen/Qwen2.5-VL-32B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-32B-Instruct) |
+| Qwen3-VL-4B-Instruct           | [Qwen/Qwen3-VL-4B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct) |
 | LLaVA-OneVision (Qwen2-7B-ov)  | [llava-hf/llava-onevision-qwen2-7b-ov-hf](https://huggingface.co/llava-hf/llava-onevision-qwen2-7b-ov-hf) |
 
-The pipeline is model-agnostic and additionally supports Qwen3-VL, InternVL and
-MiniCPM-V (see *Multi-model support*); those are provided for compatibility and
-are **not** part of the experiments reported in this paper, so no links are
-listed here for them.
+The pipeline is model-agnostic and additionally supports InternVL and MiniCPM-V
+(see *Multi-model support*); those are provided for compatibility and are
+**not** part of the experiments reported in this paper, so no links are listed
+here for them.
+
+## Baselines
+
+Table 1 and Table 2 compare VisCache against the following plug-and-play KV
+cache / visual-token compression methods. The links point to their original
+papers.
+
+| Method | Paper |
+|--------|-------|
+| **Q-Frame** (Zhang et al., 2025a) | [Q-Frame: Query-aware Frame Selection and Multi-Resolution Adaptation for Video-LLMs](https://arxiv.org/abs/2506.22139) (ICCV 2025) |
+| **PyramidKV** (Cai et al., 2024) | [PyramidKV: Dynamic KV Cache Compression based on Pyramidal Information Funneling](https://arxiv.org/abs/2406.02069) |
+| **FastV** (Chen et al., 2024a) | [An Image is Worth 1/2 Tokens After Layer 2: Plug-and-Play Inference Acceleration for Large Vision-Language Models](https://arxiv.org/abs/2403.06764) (ECCV 2024) |
+| **PDrop** (Xing et al., 2024) | [PyramidDrop: Accelerating Your Large Vision-Language Models via Pyramid Visual Redundancy Reduction](https://arxiv.org/abs/2410.17247) |
 
 ## Efficiency measurement
 
@@ -196,3 +210,36 @@ print(gen["total_ms"], mem, format_flops(flops["total"]))
 (per-layer projections + MLP + quadratic attention that scales with the
 compressed cache length); `measure_generate` / `measure_decode` are wall-clock
 timings taken with CUDA events.
+
+## Main results from the paper
+
+Below are the key figures and tables from the EMNLP 2026 paper (see the PDF in
+the repository for the complete results and appendices).
+
+### Layer-wise budget visualization
+
+![Figure 1](assets/figure1.png)
+*Figure 1: Visualization of different plug-and-play layer-wise KV cache compression
+methods. VisCache differs from the baselines in the shape of the per-layer budget
+allocation (parabolic decay with a hard truncation layer).*
+
+### Framework overview
+
+![Figure 2](assets/figure2.png)
+*Figure 2: Overview of VisCache. Stage 1 (top) uses a lightweight scout VLM to
+filter redundant keyframes via MMR; Stage 2 (bottom) performs attention-aware,
+layer-wise KV cache pruning with PruneKV.*
+
+### Comparison with baselines on VQA and VS datasets
+
+![Table 1](assets/table1.png)
+*Table 1: Comparison of different KV cache compression methods on various VQA and
+VS datasets under controlled retention ratios. Best / second-best results are
+bold / underlined.*
+
+### MVBench results
+
+![Table 2](assets/table2.png)
+*Table 2: Results on MVBench of different KV cache compression methods
+( p = 0.75, q = 0.67 ). The table reports all 20 reasoning tasks as well as the
+overall average.*
