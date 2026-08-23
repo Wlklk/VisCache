@@ -162,6 +162,18 @@ the downloaded files.
 | NExT-QA (NextQA)         | Causal / temporal MC video QA   | [VLM2Vec/NExTQA](https://huggingface.co/datasets/VLM2Vec/NExTQA)                                         |
 | ActivityNet Captions (ActCap) | Dense video captioning     | [HuggingFaceM4/ActivitiyNet_Captions](https://huggingface.co/datasets/HuggingFaceM4/ActivitiyNet_Captions) |
 
+## Models (Hugging Face)
+
+VisCache is validated primarily on the **Qwen2.5-VL** series and is also
+compatible with **Qwen3-VL**; the pipeline is model-agnostic and further
+supports LLaVA, InternVL and MiniCPM-V (see *Multi-model support*). All model
+weights are released on the Hugging Face Hub under the `Qwen` organization.
+
+| Model family | Hugging Face checkpoints |
+|--------------|--------------------------|
+| Qwen2.5-VL   | [3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) · [7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) · [32B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-32B-Instruct) · [72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct) |
+| Qwen3-VL     | [4B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct) · [8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct) · [32B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct) · [30B-A3B-Instruct (MoE)](https://huggingface.co/Qwen/Qwen3-VL-30B-A3B-Instruct) |
+
 ## Efficiency measurement
 
 `efficiency/measure.py` reports the three metrics used in the paper, all
