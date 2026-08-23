@@ -206,7 +206,7 @@ papers.
 | Method | Paper | Venue |
 |--------|-------|-------|
 | **Q-Frame** (Zhang et al., 2025a) | [Q-Frame: Query-aware Frame Selection and Multi-Resolution Adaptation for Video-LLMs](https://arxiv.org/abs/2506.22139) | **ICCV 2025** |
-| **PyramidKV** (Cai et al., 2024) | [PyramidKV: Dynamic KV Cache Compression based on Pyramidal Information Funneling](https://arxiv.org/abs/2406.02069) | **EMNLP 2024** (Findings) |
+| **PyramidKV** (Cai et al., 2024) | [PyramidKV: Dynamic KV Cache Compression based on Pyramidal Information Funneling](https://arxiv.org/abs/2406.02069) | **COLM 2025** |
 | **FastV** (Chen et al., 2024a) | [An Image is Worth 1/2 Tokens After Layer 2: Plug-and-Play Inference Acceleration for Large Vision-Language Models](https://arxiv.org/abs/2403.06764) | **ECCV 2024** (Oral) |
 | **PDrop** (Xing et al., 2024) | [PyramidDrop: Accelerating Your Large Vision-Language Models via Pyramid Visual Redundancy Reduction](https://arxiv.org/abs/2410.17247) | **CVPR 2025** |
 
