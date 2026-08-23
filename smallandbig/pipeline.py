@@ -1,5 +1,10 @@
 import torch
 
+from .compat import (
+    find_transformer_layers,
+    locate_vision_tokens,
+    resolve_num_layers,
+)
 from .compression import (
     create_compatible_cache,
     prune_kv_layerwise,
@@ -12,6 +17,7 @@ from .keyframe import select_keyframes
 def register_attention_hooks(model):
     total = [None]
     hooks = []
+    layers = find_transformer_layers(model)
 
     def make_hook():
         def hook(module, inp, out):
@@ -24,7 +30,7 @@ def register_attention_hooks(model):
 
         return hook
 
-    for layer in model.language_model.layers:
+    for layer in layers:
         hooks.append(layer.self_attn.register_forward_hook(make_hook()))
 
     def get_scores():
@@ -39,9 +45,9 @@ def register_attention_hooks(model):
     return get_scores, remove
 
 
-def compress_kv_cache(model, past_key_values, total_scores, config: SmallAndBigConfig):
-    key_cache, value_cache, token_scores, num_select = select_visual_tokens(
-        past_key_values, total_scores, config.beta, config.sys_token_num
+def compress_kv_cache(model, past_key_values, total_scores, vision_idx, config: SmallAndBigConfig):
+    key_cache, value_cache, token_scores, num_select, prefix_len = select_visual_tokens(
+        past_key_values, total_scores, config.beta, vision_idx
     )
     return prune_kv_layerwise(
         model,
@@ -56,12 +62,27 @@ def compress_kv_cache(model, past_key_values, total_scores, config: SmallAndBigC
         config.fusion_ratio,
         config.fusion_alpha,
         config.fusion_temperature,
-        config.sys_token_num,
+        prefix_len,
     )
 
 
-def run(model, processor, messages, video_tensor, clip_model, device, config: SmallAndBigConfig,
-        max_new_tokens=128, stopping_criteria=None):
+def default_build_inputs(processor, messages, video_tensor, device):
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    return processor(
+        text=[text],
+        images=None,
+        videos=[[video_tensor]],
+        fps=1,
+        padding=True,
+        return_tensors="pt",
+    ).to(device)
+
+
+def run(model, processor, messages, video_tensor, clip_model, device, config: SmallAndBigConfig = None,
+        max_new_tokens=128, stopping_criteria=None, build_inputs=None, vision_token_ids=None):
+    config = config or SmallAndBigConfig()
+    resolve_num_layers(config, model)
+
     prompt = next(
         c["text"] for c in messages[0]["content"] if c["type"] == "text"
     )
@@ -71,14 +92,14 @@ def run(model, processor, messages, video_tensor, clip_model, device, config: Sm
     )
     video_tensor = video_tensor[keyframes]
 
-    inputs = processor(
-        text=[processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)],
-        images=None,
-        videos=[[video_tensor]],
-        fps=1,
-        padding=True,
-        return_tensors="pt",
-    ).to(device)
+    if build_inputs is not None:
+        inputs = build_inputs(processor, messages, video_tensor, device)
+    else:
+        inputs = default_build_inputs(processor, messages, video_tensor, device)
+
+    tokenizer = getattr(processor, "tokenizer", None) or getattr(model, "tokenizer", None)
+    vids = vision_token_ids if vision_token_ids is not None else config.vision_token_ids
+    vision_idx = locate_vision_tokens(inputs["input_ids"][0], tokenizer, vids)
 
     get_scores, remove_hooks = register_attention_hooks(model)
     with torch.no_grad():
@@ -89,7 +110,7 @@ def run(model, processor, messages, video_tensor, clip_model, device, config: Sm
     past_key_values = outputs.past_key_values
     del outputs
 
-    new_cache = compress_kv_cache(model, past_key_values, total_scores, config)
+    new_cache = compress_kv_cache(model, past_key_values, total_scores, vision_idx, config)
     del past_key_values
 
     gen_kwargs = dict(

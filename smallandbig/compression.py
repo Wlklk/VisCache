@@ -97,31 +97,32 @@ def selective_attention_fusion(
     return v_enhanced
 
 
-def select_visual_tokens(past_key_values, total_scores, beta, sys_token_num=15):
-    L = total_scores.shape[0] - sys_token_num
-    num_select = round(beta * L)
+def select_visual_tokens(past_key_values, total_scores, beta, vision_idx):
+    vision_idx = vision_idx.to(total_scores.device)
+    vis_start = int(vision_idx.min())
+    V = vision_idx.shape[0]
+    num_select = round(beta * V)
 
-    score_vis = total_scores[sys_token_num:sys_token_num + L]
-    topk_scores, topk_idx = torch.topk(score_vis, k=num_select, dim=-1)
-    order = torch.argsort(topk_idx)
-    topk_idx = topk_idx[order]
+    score_vis = total_scores[vision_idx]
+    topk_scores, topk_local = torch.topk(score_vis, k=num_select, dim=-1)
+    order = torch.argsort(topk_local)
+    topk_local = topk_local[order]
     topk_scores = topk_scores[order]
+    selected_idx = vision_idx[topk_local]
+
+    S = total_scores.shape[0]
+    pre = torch.arange(vis_start, device=total_scores.device)
+    post = torch.arange(vis_start + V, S, device=total_scores.device)
+    new_order = torch.cat([pre, selected_idx, post])
 
     key_cache, value_cache = [], []
     for k, v in past_key_values:
-        topk_idx = topk_idx.to(k.device)
-        k_sys, v_sys = k[:, :, :sys_token_num, :], v[:, :, :sys_token_num, :]
-        k_vis, v_vis = k[:, :, sys_token_num:sys_token_num + L, :], v[:, :, sys_token_num:sys_token_num + L, :]
-        k_text, v_text = k[:, :, sys_token_num + L:, :], v[:, :, sys_token_num + L:, :]
+        nd = new_order.to(k.device)
+        gather = nd.view(1, 1, -1, 1).expand(k.size(0), k.size(1), -1, k.size(-1))
+        key_cache.append(torch.gather(k, 2, gather))
+        value_cache.append(torch.gather(v, 2, gather))
 
-        gather_idx = topk_idx.view(1, 1, -1, 1).expand(k_vis.size(0), k_vis.size(1), -1, k_vis.size(-1))
-        k_sel = torch.gather(k_vis, 2, gather_idx)
-        v_sel = torch.gather(v_vis, 2, gather_idx)
-
-        key_cache.append(torch.cat([k_sys, k_sel, k_text], dim=2))
-        value_cache.append(torch.cat([v_sys, v_sel, v_text], dim=2))
-
-    return key_cache, value_cache, topk_scores, num_select
+    return key_cache, value_cache, topk_scores, num_select, vis_start
 
 
 def prune_kv_layerwise(
@@ -137,7 +138,7 @@ def prune_kv_layerwise(
     fusion_ratio=0.3,
     fusion_alpha=0.2,
     fusion_temperature=1.0,
-    sys_token_num=15,
+    prefix_len=0,
 ):
     L_new = num_select
     layer_tokens = monotonic_parabolic_allocation(
@@ -152,9 +153,9 @@ def prune_kv_layerwise(
 
     new_keys, new_values = [], []
     for i, (k, v) in enumerate(zip(key_cache, value_cache)):
-        k_sys, v_sys = k[:, :, :sys_token_num, :], v[:, :, :sys_token_num, :]
-        k_vis, v_vis = k[:, :, sys_token_num:sys_token_num + L_new, :], v[:, :, sys_token_num:sys_token_num + L_new, :]
-        k_text, v_text = k[:, :, sys_token_num + L_new:, :], v[:, :, sys_token_num + L_new:, :]
+        k_pre, v_pre = k[:, :, :prefix_len, :], v[:, :, :prefix_len, :]
+        k_vis, v_vis = k[:, :, prefix_len:prefix_len + L_new, :], v[:, :, prefix_len:prefix_len + L_new, :]
+        k_post, v_post = k[:, :, prefix_len + L_new:, :], v[:, :, prefix_len + L_new:, :]
 
         if i < layer_id1:
             keep = layer_tokens[i]
@@ -167,10 +168,10 @@ def prune_kv_layerwise(
             v_top = selective_attention_fusion(
                 v_vis, topk_idx, token_scores, fusion_ratio, fusion_alpha, fusion_temperature
             )
-            new_keys.append(torch.cat([k_sys, k_top, k_text], dim=2))
-            new_values.append(torch.cat([v_sys, v_top, v_text], dim=2))
+            new_keys.append(torch.cat([k_pre, k_top, k_post], dim=2))
+            new_values.append(torch.cat([v_pre, v_top, v_post], dim=2))
         else:
-            new_keys.append(torch.cat([k_sys, k_text], dim=2))
-            new_values.append(torch.cat([v_sys, v_text], dim=2))
+            new_keys.append(torch.cat([k_pre, k_post], dim=2))
+            new_values.append(torch.cat([v_pre, v_post], dim=2))
 
     return create_compatible_cache(model, new_keys, new_values)

@@ -17,13 +17,14 @@ Given a video and a prompt, the pipeline runs in four steps:
    `alpha · T` frames are kept, shrinking the video before it ever reaches the LLM.
 
 2. **Prefill with attention accumulation** (`pipeline.py`)
-   A forward hook on every `language_model.layers[i].self_attn` sums the mean
-   attention maps across all layers into one per-token importance score.
+   A forward hook on every decoder-layer `self_attn` (auto-located for Qwen-VL /
+   LLaVA / InternVL / MiniCPM-V) sums the mean attention maps across all layers into
+   one per-token importance score.
 
 3. **Global visual-token selection** (`compression.select_visual_tokens`)
-   From the `L = T' · v` visual tokens (after keyframing), the top `beta · L` tokens
-   by accumulated attention are kept; the rest are dropped. System tokens and all text
-   tokens are always preserved.
+   Visual tokens are auto-located by their placeholder ids (e.g. `<|image_pad|>`),
+   independent of how many system/text tokens precede them. The top `beta · V` visual
+   tokens by accumulated attention are kept; all non-visual tokens are preserved.
 
 4. **Layerwise progressive prune + fusion** (`compression.prune_kv_layerwise`)
    A monotonic parabola assigns each of the first `layer_id1` layers a decreasing
@@ -32,6 +33,22 @@ Given a video and a prompt, the pipeline runs in four steps:
    `>= layer_id1` discard all visual tokens entirely ("small").
 
 The compressed `past_key_values` is then fed straight into `model.generate`.
+
+## Multi-model support
+
+The pipeline is model-agnostic — nothing is hard-coded to Qwen2.5-VL:
+
+- **Transformer layers** are auto-located by trying `language_model.layers`
+  (Qwen-VL / InternVL), `model.layers` (LLaVA), `model.model.layers`, then
+  `llm.layers` (MiniCPM-V). Override via `find_transformer_layers`.
+- **Number of layers** is read from `model.config.num_hidden_layers` when
+  `num_layers=None`; `layer_id1` then defaults to `round(0.75 · num_layers)`.
+- **Visual tokens** are found by their placeholder ids. When `vision_token_ids`
+  is `None`, common image placeholders are auto-detected
+  (`<|image_pad|>`, `<image>`, `<|IMAGE_TOKEN|>`, `<img>`, …). Pass an explicit
+  set (e.g. `{model.config.image_token_index}`) for unusual tokenizers.
+- **Input building** differs per architecture, so `run()` accepts a `build_inputs`
+  callback. The default handles Qwen2.5-VL; LLaVA / others supply their own.
 
 ## Project layout
 
@@ -55,7 +72,7 @@ SmallAndBig/                 # repository root
 | `alpha`             | 0.5     | fraction of frames kept by keyframe selection            |
 | `mmr_lambda`        | 0.7     | MMR trade-off: relevance vs. diversity                   |
 | `beta`              | 0.67    | fraction of visual tokens kept after global selection    |
-| `num_layers`        | 36      | total model layers (36 for 3B, 64 for 32B)               |
+| `num_layers`        | auto    | total model layers; None -> read from model.config.num_hidden_layers |
 | `layer_id1`         | auto    | layers 0..layer_id1-1 keep tokens; None -> round(0.75·num_layers): 27 (3B) / 48 (32B) |
 | `compression_ratio` | 0.75    | target keep-ratio used by the parabolic allocation      |
 | `alloc_steepness`   | 0.5     | how fast the per-layer keep-count decreases             |
@@ -63,14 +80,14 @@ SmallAndBig/                 # repository root
 | `fusion_ratio`      | 0.3     | fraction of dropped tokens fused into each survivor      |
 | `fusion_alpha`      | 0.2     | fusion strength                                          |
 | `fusion_temperature`| 1.0     | softmax temperature over dropped-token attention        |
-| `sys_token_num`     | 15      | system tokens prepended before visual tokens             |
+| `vision_token_ids`  | auto    | token ids marking visual tokens; None -> auto-detect common placeholders |
 
 ## Usage
 
 ```python
 from smallandbig import SmallAndBigConfig, run
 
-config = SmallAndBigConfig(num_layers=36)   # 3B=36 layers -> layer_id1=27; 32B=64 -> 48
+config = SmallAndBigConfig()   # num_layers / layer_id1 auto-derived from the model
 
 answer = run(
     model=model,                # Qwen2.5-VL
@@ -82,6 +99,18 @@ answer = run(
     config=config,
     max_new_tokens=128,
 )
+```
+
+For non-Qwen processors, pass a `build_inputs` callback that returns the model
+inputs (the clip-based keyframe selection still runs upstream):
+
+```python
+def llava_build_inputs(processor, messages, video_tensor, device):
+    prompt = next(c["text"] for c in messages[0]["content"] if c["type"] == "text")
+    inputs = processor(images=video_tensor, text=prompt, return_tensors="pt")
+    return inputs.to(device)
+
+run(..., build_inputs=llava_build_inputs)   # vision_token_ids auto-detected
 ```
 
 See `run_demo.py` for a complete example.

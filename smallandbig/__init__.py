@@ -1,5 +1,6 @@
 from .config import SmallAndBigConfig
 from .keyframe import encode_text, select_keyframes
+from .compat import find_transformer_layers, locate_vision_tokens
 from .compression import (
     create_compatible_cache,
     monotonic_parabolic_allocation,
@@ -17,6 +18,8 @@ __all__ = [
     "SmallAndBigConfig",
     "encode_text",
     "select_keyframes",
+    "find_transformer_layers",
+    "locate_vision_tokens",
     "create_compatible_cache",
     "monotonic_parabolic_allocation",
     "prune_kv_layerwise",
