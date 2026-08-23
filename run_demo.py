@@ -27,7 +27,7 @@ def main():
         }
     ]
 
-    config = SmallAndBigConfig(layer_id1=36)
+    config = SmallAndBigConfig(num_layers=36)  # Qwen2.5-VL-3B -> layer_id1 = 27
 
     answer = run(
         model=model,

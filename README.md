@@ -55,7 +55,8 @@ SmallAndBig/                 # repository root
 | `alpha`             | 0.5     | fraction of frames kept by keyframe selection            |
 | `mmr_lambda`        | 0.7     | MMR trade-off: relevance vs. diversity                   |
 | `beta`              | 0.67    | fraction of visual tokens kept after global selection    |
-| `layer_id1`         | 36      | layers 0..layer_id1-1 keep tokens; deeper layers drop   |
+| `num_layers`        | 36      | total model layers (36 for 3B, 64 for 32B)               |
+| `layer_id1`         | auto    | layers 0..layer_id1-1 keep tokens; None -> round(0.75·num_layers): 27 (3B) / 48 (32B) |
 | `compression_ratio` | 0.75    | target keep-ratio used by the parabolic allocation      |
 | `alloc_steepness`   | 0.5     | how fast the per-layer keep-count decreases             |
 | `min_tokens`        | 1       | lower bound on kept tokens per layer                     |
@@ -69,7 +70,7 @@ SmallAndBig/                 # repository root
 ```python
 from smallandbig import SmallAndBigConfig, run
 
-config = SmallAndBigConfig(layer_id1=36)   # 36 for Qwen2.5-VL-3B, 48 for 32B
+config = SmallAndBigConfig(num_layers=36)   # 3B=36 layers -> layer_id1=27; 32B=64 -> 48
 
 answer = run(
     model=model,                # Qwen2.5-VL
