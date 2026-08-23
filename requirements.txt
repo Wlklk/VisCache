@@ -1,0 +1,5 @@
+torch>=2.0
+transformers>=4.40
+clip  # openai/CLIP
+torchvision
+qwen-vl-utils
