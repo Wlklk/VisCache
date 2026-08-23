@@ -3,3 +3,7 @@ transformers>=4.40
 clip  # openai/CLIP
 torchvision
 qwen-vl-utils
+datasets      # MVBench / benchmark loaders
+decord        # video decoding
+sacrebleu     # captioning metrics
+tqdm

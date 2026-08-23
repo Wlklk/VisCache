@@ -67,6 +67,11 @@ VisCache/                   # repository root
 │   ├── compression.py   # global token selection, layerwise prune, fusion
 │   ├── pipeline.py      # prefill hooks + compress + generate
 │   └── __init__.py
+├── benchmarks/              # evaluation harnesses
+│   ├── loader.py       # MVBench task registry, sample loading, MCQ / ROUGE scoring
+│   └── mvbench.py       # MVBench multiple-choice eval (reuses the package above)
+├── efficiency/              # efficiency measurement
+│   └── measure.py       # latency (CUDA events), KV-cache memory, theoretical FLOPs
 ├── run_demo.py          # minimal end-to-end usage example
 ├── requirements.txt
 └── README.md
@@ -121,3 +126,41 @@ run(..., build_inputs=llava_build_inputs)   # vision_token_ids auto-detected
 ```
 
 See `run_demo.py` for a complete example.
+
+## Benchmarks — MVBench
+
+`benchmarks/mvbench.py` evaluates VisCache on the 20 MVBench sub-tasks. It reuses
+the package end-to-end: CLIP keyframe selection → prefill with attention
+accumulation → `compress_kv_cache` → `model.generate`, then scores each sample as
+multiple-choice with `mcq_acc`. The 20 tasks are described by a single declarative
+registry (`MVBENCH_TASKS` in `loader.py`) instead of 20 duplicated branches.
+
+```bash
+python -m benchmarks.mvbench \
+    --model_path Qwen/Qwen2.5-VL-3B-Instruct \
+    --mvbench_root /data/MVBench --json_root /data/MVBench/JSON \
+    --clip_model ViT-B/32 --tasks AS AP AC
+```
+
+Per-task and overall accuracy are written to `mvbench_results_ours_<model>.txt`.
+Other video benchmarks (EgoSchema, ActCap, DREAM1K, ActQA, NextQA, …) follow the
+same `BenchmarkSample` contract and can reuse the scoring helpers in `loader.py`.
+
+## Efficiency measurement
+
+`efficiency/measure.py` reports the three metrics used in the paper, all
+model-agnostic:
+
+```python
+from efficiency import measure_generate, kv_cache_memory_mb, estimate_decode_flops, format_flops
+
+gen = measure_generate(model, inputs, max_new_tokens=128)   # total / prefill / decode (ms)
+mem = kv_cache_memory_mb(new_cache)                        # KV-cache footprint (MB)
+flops = estimate_decode_flops(model, gen["generated_tokens"], gen["generated_tokens"])
+print(gen["total_ms"], mem, format_flops(flops["total"]))
+```
+
+`estimate_decode_flops` is a closed-form count of the decode-stage FLOPs
+(per-layer projections + MLP + quadratic attention that scales with the
+compressed cache length); `measure_generate` / `measure_decode` are wall-clock
+timings taken with CUDA events.
