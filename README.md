@@ -219,27 +219,15 @@ the repository for the complete results and appendices).
 ### Layer-wise budget visualization
 
 ![Figure 1](assets/figure1.png)
-*Figure 1: Visualization of different plug-and-play layer-wise KV cache compression
-methods. VisCache differs from the baselines in the shape of the per-layer budget
-allocation (parabolic decay with a hard truncation layer).*
 
 ### Framework overview
 
 ![Figure 2](assets/figure2.png)
-*Figure 2: Overview of VisCache. Stage 1 (top) uses a lightweight scout VLM to
-filter redundant keyframes via MMR; Stage 2 (bottom) performs attention-aware,
-layer-wise KV cache pruning with PruneKV.*
 
 ### Comparison with baselines on VQA and VS datasets
 
 ![Table 1](assets/table1.png)
-*Table 1: Comparison of different KV cache compression methods on various VQA and
-VS datasets under controlled retention ratios. Best / second-best results are
-bold / underlined.*
 
 ### MVBench results
 
 ![Table 2](assets/table2.png)
-*Table 2: Results on MVBench of different KV cache compression methods
-( p = 0.75, q = 0.67 ). The table reports all 20 reasoning tasks as well as the
-overall average.*
