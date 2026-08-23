@@ -164,15 +164,19 @@ the downloaded files.
 
 ## Models (Hugging Face)
 
-VisCache is validated primarily on the **Qwen2.5-VL** series and is also
-compatible with **Qwen3-VL**; the pipeline is model-agnostic and further
-supports LLaVA, InternVL and MiniCPM-V (see *Multi-model support*). All model
-weights are released on the Hugging Face Hub under the `Qwen` organization.
+The experiments in this paper are conducted on the following vision-language
+backbones. All weights are released on the Hugging Face Hub.
 
-| Model family | Hugging Face checkpoints |
-|--------------|--------------------------|
-| Qwen2.5-VL   | [3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) · [7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct) · [32B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-32B-Instruct) · [72B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-72B-Instruct) |
-| Qwen3-VL     | [4B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct) · [8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct) · [32B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct) · [30B-A3B-Instruct (MoE)](https://huggingface.co/Qwen/Qwen3-VL-30B-A3B-Instruct) |
+| Model (evaluated in the paper) | Hugging Face checkpoint |
+|--------------------------------|-------------------------|
+| Qwen2.5-VL-3B-Instruct         | [Qwen/Qwen2.5-VL-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-3B-Instruct) |
+| Qwen2.5-VL-32B-Instruct        | [Qwen/Qwen2.5-VL-32B-Instruct](https://huggingface.co/Qwen/Qwen2.5-VL-32B-Instruct) |
+| LLaVA-OneVision (Qwen2-7B-ov)  | [llava-hf/llava-onevision-qwen2-7b-ov-hf](https://huggingface.co/llava-hf/llava-onevision-qwen2-7b-ov-hf) |
+
+The pipeline is model-agnostic and additionally supports Qwen3-VL, InternVL and
+MiniCPM-V (see *Multi-model support*); those are provided for compatibility and
+are **not** part of the experiments reported in this paper, so no links are
+listed here for them.
 
 ## Efficiency measurement
 
