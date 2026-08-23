@@ -146,6 +146,22 @@ Per-task and overall accuracy are written to `mvbench_results_ours_<model>.txt`.
 Other video benchmarks (EgoSchema, ActCap, DREAM1K, ActQA, NextQA, …) follow the
 same `BenchmarkSample` contract and can reuse the scoring helpers in `loader.py`.
 
+## Datasets (Hugging Face)
+
+All benchmarks evaluated in the paper are publicly hosted on the Hugging Face
+Hub. VisCache reuses the standard `lmms-eval` / original dataset loaders — you
+only need to point the data paths (e.g. `--mvbench_root`) at a local copy of
+the downloaded files.
+
+| Benchmark                | Task type                       | Hugging Face dataset                                                                                       |
+|--------------------------|---------------------------------|-----------------------------------------------------------------------------------------------------------|
+| MVBench                  | Multiple-choice video QA (20 tasks) | [OpenGVLab/MVBench](https://huggingface.co/datasets/OpenGVLab/MVBench)                                   |
+| EgoSchema                | Long-form egocentric MC QA      | [lmms-lab/egoschema](https://huggingface.co/datasets/lmms-lab/egoschema)                                 |
+| DREAM-1K                 | Fine-grained video description  | [omni-research/DREAM-1K](https://huggingface.co/datasets/omni-research/DREAM-1K)                         |
+| ActivityNet-QA (ActQA)   | Open-ended / MC video QA        | [lmms-lab/ActivityNetQA](https://huggingface.co/datasets/lmms-lab/ActivityNetQA)                         |
+| NExT-QA (NextQA)         | Causal / temporal MC video QA   | [VLM2Vec/NExTQA](https://huggingface.co/datasets/VLM2Vec/NExTQA)                                         |
+| ActivityNet Captions (ActCap) | Dense video captioning     | [HuggingFaceM4/ActivitiyNet_Captions](https://huggingface.co/datasets/HuggingFaceM4/ActivitiyNet_Captions) |
+
 ## Efficiency measurement
 
 `efficiency/measure.py` reports the three metrics used in the paper, all
