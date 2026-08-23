@@ -14,6 +14,24 @@ VisCache is a training-free, plug-and-play framework for coarse-to-fine **Visual
 
 While Vision Large Language Models (VLLMs) have achieved remarkable success in multimodal reasoning, their long-context inference remains prohibitively expensive due to the massive computation and memory overhead of visual Key-Value (KV) caches. Existing KV compression methods often apply uniform pruning across visual tokens and layers, leading to substantial information loss and degraded performance. To address this challenge, we propose **VisCache**, a plug-and-play framework for coarse-to-fine **Vis**ual KV **Cache** pruning without training, which consists of two synergistic stages. First, a lightweight VLM filters temporal redundancy by selectively forwarding semantically informative keyframes. Second, we introduce PruneKV, a surgical KV compression algorithm tailored to the attention dynamics of VLLMs. Unlike rigid pruning strategies, PruneKV adopts a parabolic layer-wise budget allocation together with an asymmetric update mechanism that selectively prunes keys while fusing values, thereby preserving critical contextual information. Extensive experiments demonstrate that VisCache substantially improves inference efficiency, achieving up to 2.35× speedup and significant memory reduction while maintaining competitive performance with only 19–28% KV cache retention. VisCache consistently outperforms existing baselines, establishing a new Pareto frontier between efficiency and performance for long-context VLLM inference. Code is available in [https://github.com/Wlklk/VisCache](https://github.com/Wlklk/VisCache).
 
+## Installation
+
+```bash
+git clone https://github.com/Wlklk/VisCache.git
+cd VisCache
+pip install -r requirements.txt
+```
+
+> **Requirements:** Python ≥ 3.9, PyTorch ≥ 2.0, and a CUDA-capable GPU (recommended for video-LLM inference). Model checkpoints (e.g. `Qwen/Qwen2.5-VL-3B-Instruct`) are downloaded automatically from the Hugging Face Hub on first run.
+
+## Quick start
+
+```bash
+python run_demo.py
+```
+
+This loads `Qwen2.5-VL-3B-Instruct` + CLIP, runs the full VisCache pipeline on a random dummy video, and prints the generated answer.
+
 ## Method
 
 Given a video and a prompt, the pipeline runs in four steps:
