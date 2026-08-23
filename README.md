@@ -1,11 +1,14 @@
 # VisCache — Visual KV Cache Pruning for Efficient Vision Large Language Model Inference
 
-A clean reimplementation of the "Small and Big" KV-cache compression pipeline for video
-multimodal LLMs (e.g. Qwen2.5-VL). Visual tokens are pruned in two stages — a **global
-attention-based selection** that keeps the most informative visual tokens, followed by a
-**layerwise progressive prune** where shallow layers keep many tokens ("big") and deep
-layers keep few or none ("small"). Dropped tokens are fused into the survivors via a
-selective attention fusion, so information is preserved without growing the cache.
+[![EMNLP 2026](https://img.shields.io/badge/EMNLP-2026%20Main%20Conference-blue)](https://2026.emnlp.org/)
+
+**Accepted as a Main Conference paper at EMNLP 2026.**
+
+VisCache is a training-free, plug-and-play framework for coarse-to-fine **Visual KV Cache** pruning in video large language models (e.g. Qwen2.5-VL). It reduces visual-KV redundancy through two synergistic stages.
+
+**Stage 1 — Prompt-aware temporal filtering.** A lightweight vision-language "scout" (CLIP) selects a compact, query-relevant, and diverse subset of keyframes via the Maximal Marginal Relevance (MMR) principle, eliminating temporal redundancy before inference.
+
+**Stage 2 — PruneKV (layer-aware KV compression).** Rather than pruning uniformly, PruneKV allocates per-layer compression budgets following a parabolic decay: more visual tokens are kept in early layers that encode fine-grained details and progressively fewer in deeper layers, with visual KV entries beyond a truncation threshold fully evicted. It further adopts an asymmetric update that treats keys and values differently — unimportant keys are pruned while their values are fused into the retained tokens via similarity-weighted aggregation, preserving contextual information without growing the cache.
 
 ## Abstract
 
