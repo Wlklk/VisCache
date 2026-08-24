@@ -4,16 +4,6 @@
 
 **Accepted as a Main Conference paper at EMNLP 2026.**
 
-VisCache is a training-free, plug-and-play framework for coarse-to-fine **Visual KV Cache** pruning in video large language models (e.g. Qwen2.5-VL). It reduces visual-KV redundancy through two synergistic stages.
-
-**Stage 1 — Prompt-aware temporal filtering.** A lightweight vision-language "scout" (CLIP) selects a compact, query-relevant, and diverse subset of keyframes via the Maximal Marginal Relevance (MMR) principle, eliminating temporal redundancy before inference.
-
-**Stage 2 — PruneKV (layer-aware KV compression).** Rather than pruning uniformly, PruneKV allocates per-layer compression budgets following a parabolic decay: more visual tokens are kept in early layers that encode fine-grained details and progressively fewer in deeper layers, with visual KV entries beyond a truncation threshold fully evicted. It further adopts an asymmetric update that treats keys and values differently — unimportant keys are pruned while their values are fused into the retained tokens via similarity-weighted aggregation, preserving contextual information without growing the cache.
-
-## Abstract
-
-While Vision Large Language Models (VLLMs) have achieved remarkable success in multimodal reasoning, their long-context inference remains prohibitively expensive due to the massive computation and memory overhead of visual Key-Value (KV) caches. Existing KV compression methods often apply uniform pruning across visual tokens and layers, leading to substantial information loss and degraded performance. To address this challenge, we propose **VisCache**, a plug-and-play framework for coarse-to-fine **Vis**ual KV **Cache** pruning without training, which consists of two synergistic stages. First, a lightweight VLM filters temporal redundancy by selectively forwarding semantically informative keyframes. Second, we introduce PruneKV, a surgical KV compression algorithm tailored to the attention dynamics of VLLMs. Unlike rigid pruning strategies, PruneKV adopts a parabolic layer-wise budget allocation together with an asymmetric update mechanism that selectively prunes keys while fusing values, thereby preserving critical contextual information. Extensive experiments demonstrate that VisCache substantially improves inference efficiency, achieving up to 2.35× speedup and significant memory reduction while maintaining competitive performance with only 19–28% KV cache retention. VisCache consistently outperforms existing baselines, establishing a new Pareto frontier between efficiency and performance for long-context VLLM inference. Code is available in [https://github.com/Wlklk/VisCache](https://github.com/Wlklk/VisCache).
-
 ## Authors
 
 **Lyuke Wang**¹,²,³, **Zhuo Li**¹,²,³, **Guangxu Zhu**¹,²,³,⁴\*  
@@ -24,6 +14,16 @@ While Vision Large Language Models (VLLMs) have achieved remarkable success in m
 ⁴ Shenzhen Loop Area Institute  
 
 \* Corresponding author.
+
+VisCache is a training-free, plug-and-play framework for coarse-to-fine **Visual KV Cache** pruning in video large language models (e.g. Qwen2.5-VL). It reduces visual-KV redundancy through two synergistic stages.
+
+**Stage 1 — Prompt-aware temporal filtering.** A lightweight vision-language "scout" (CLIP) selects a compact, query-relevant, and diverse subset of keyframes via the Maximal Marginal Relevance (MMR) principle, eliminating temporal redundancy before inference.
+
+**Stage 2 — PruneKV (layer-aware KV compression).** Rather than pruning uniformly, PruneKV allocates per-layer compression budgets following a parabolic decay: more visual tokens are kept in early layers that encode fine-grained details and progressively fewer in deeper layers, with visual KV entries beyond a truncation threshold fully evicted. It further adopts an asymmetric update that treats keys and values differently — unimportant keys are pruned while their values are fused into the retained tokens via similarity-weighted aggregation, preserving contextual information without growing the cache.
+
+## Abstract
+
+While Vision Large Language Models (VLLMs) have achieved remarkable success in multimodal reasoning, their long-context inference remains prohibitively expensive due to the massive computation and memory overhead of visual Key-Value (KV) caches. Existing KV compression methods often apply uniform pruning across visual tokens and layers, leading to substantial information loss and degraded performance. To address this challenge, we propose **VisCache**, a plug-and-play framework for coarse-to-fine **Vis**ual KV **Cache** pruning without training, which consists of two synergistic stages. First, a lightweight VLM filters temporal redundancy by selectively forwarding semantically informative keyframes. Second, we introduce PruneKV, a surgical KV compression algorithm tailored to the attention dynamics of VLLMs. Unlike rigid pruning strategies, PruneKV adopts a parabolic layer-wise budget allocation together with an asymmetric update mechanism that selectively prunes keys while fusing values, thereby preserving critical contextual information. Extensive experiments demonstrate that VisCache substantially improves inference efficiency, achieving up to 2.35× speedup and significant memory reduction while maintaining competitive performance with only 19–28% KV cache retention. VisCache consistently outperforms existing baselines, establishing a new Pareto frontier between efficiency and performance for long-context VLLM inference. Code is available in [https://github.com/Wlklk/VisCache](https://github.com/Wlklk/VisCache).
 
 ## Installation
 
