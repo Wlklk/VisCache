@@ -59,6 +59,18 @@ Given a video and a prompt, the pipeline runs in four steps:
 
 The compressed `past_key_values` is then fed straight into `model.generate`.
 
+### Illustrations
+
+![Figure 2: Framework overview](assets/figure2.png)
+*Figure 2: Overview of VisCache. Stage 1 (top) uses a lightweight scout VLM to
+filter redundant keyframes via MMR; Stage 2 (bottom) performs attention-aware,
+layer-wise KV cache pruning with PruneKV.*
+
+![Figure 1: Layer-wise budget visualization](assets/figure1.png)
+*Figure 1: Visualization of different plug-and-play layer-wise KV cache compression
+methods. VisCache differs from the baselines in the shape of the per-layer budget
+allocation (parabolic decay with a hard truncation layer).*
+
 ## Multi-model support
 
 The pipeline is model-agnostic — nothing is hard-coded to Qwen2.5-VL:
@@ -229,24 +241,15 @@ print(gen["total_ms"], mem, format_flops(flops["total"]))
 compressed cache length); `measure_generate` / `measure_decode` are wall-clock
 timings taken with CUDA events.
 
-## Main results from the paper
+The figure below visualizes the efficiency–compression trade-off measured by
+`measure.py` — end-to-end latency, time-to-first-token (TTFT) and
+time-per-output-token (TPOT) versus the KV-cache retention rate on DREAM1K and
+ActCap. The full vector figure is also available as
+[Combined_KVCache_Compression.pdf](assets/Combined_KVCache_Compression.pdf).
 
-Below are the key figures and tables from the EMNLP 2026 paper (see the PDF in
-the repository for the complete results and appendices).
+![KV cache compression trade-off](assets/combined_kvcache_compression.png)
 
-### Layer-wise budget visualization
-
-![Figure 1](assets/figure1.png)
-*Figure 1: Visualization of different plug-and-play layer-wise KV cache compression
-methods. VisCache differs from the baselines in the shape of the per-layer budget
-allocation (parabolic decay with a hard truncation layer).*
-
-### Framework overview
-
-![Figure 2](assets/figure2.png)
-*Figure 2: Overview of VisCache. Stage 1 (top) uses a lightweight scout VLM to
-filter redundant keyframes via MMR; Stage 2 (bottom) performs attention-aware,
-layer-wise KV cache pruning with PruneKV.*
+## Main results
 
 ### Comparison with baselines on VQA and VS datasets
 
