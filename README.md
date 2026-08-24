@@ -247,7 +247,7 @@ compressed cache length); `measure_generate` / `measure_decode` are wall-clock
 timings taken with CUDA events.
 
 The figure below visualizes the efficiency–compression trade-off measured by
-`measure.py` — end-to-end latency, time-to-first-token (TTFT) and
+`measure.py` — end-to-end (E2E) latency, time-to-first-token (TTFT) and
 time-per-output-token (TPOT) versus the KV-cache retention rate on DREAM1K and
 ActCap.
 
