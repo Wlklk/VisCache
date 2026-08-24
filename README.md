@@ -249,8 +249,7 @@ timings taken with CUDA events.
 The figure below visualizes the efficiency–compression trade-off measured by
 `measure.py` — end-to-end latency, time-to-first-token (TTFT) and
 time-per-output-token (TPOT) versus the KV-cache retention rate on DREAM1K and
-ActCap. The full vector figure is also available as
-[Combined_KVCache_Compression.pdf](assets/Combined_KVCache_Compression.pdf).
+ActCap.
 
 ![KV cache compression trade-off](assets/combined_kvcache_compression.png)
 
